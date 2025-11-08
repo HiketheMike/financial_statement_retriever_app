@@ -4,11 +4,12 @@
 # Example: pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 # If Tesseract is in your system's PATH, this line might not be strictly necessary.
 # However, it's good practice to explicitly set it for robustness.
-try:
-    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-except pytesseract.TesseractNotFoundError:
-    print("Tesseract-OCR is not found in the specified path or system PATH. OCR functionality may not work.")
-    print("Please install Tesseract-OCR or update the path in pdf_to_text_script.py.")
+
+# try:
+#     pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+# except pytesseract.TesseractNotFoundError:
+#     print("Tesseract-OCR is not found in the specified path or system PATH. OCR functionality may not work.")
+#     print("Please install Tesseract-OCR or update the path in pdf_to_text_script.py.")
 
 
 def run_pdf_to_text_process(company_folder_name, periods_to_process, extraction_method):
