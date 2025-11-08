@@ -63,7 +63,7 @@ if page_range_input:
 # You might want to add a text input for the API key if it's not an environment variable
 # google_api_key = st.text_input("Enter your Google API Key (optional, if not set as env var):", type="password")
 # if google_api_key:
-#     os.environ["GOOGLE_API_KEY"] = google_api_key
+os.environ["GOOGLE_API_KEY"] = "AIzaSyBAAP0sKv5nJOGySzVmd66I23vUDtjjI-s"
 
 
 st.markdown("---")
@@ -95,12 +95,12 @@ if st.button("Start Financial Data Processing"):
         # For this example, we'll just use the `run_converter_process` which includes LLM extraction
         
         # Placeholder for PDF to Text (if separated from LLM extraction)
-        # try:
-        #     pdf_to_text_log = run_pdf_to_text_process(company_folder_name, periods_to_process, extraction_method)
-        #     output_area.write(pdf_to_text_log)
-        # except Exception as e:
-        #     st.error(f"Error in PDF to Text conversion: {e}")
-        #     st.stop() # Stop execution if this critical step fails
+        try:
+            pdf_to_text_log = run_pdf_to_text_process(company_folder_name, periods_to_process, extraction_method)
+            output_area.write(pdf_to_text_log)
+        except Exception as e:
+            st.error(f"Error in PDF to Text conversion: {e}")
+            st.stop() # Stop execution if this critical step fails
 
         # --- Step 2: LLM Extraction (from 1_test_converter.ipynb) ---
         output_area.write("### Step 2: Extracting data using Gemini 2.5 Flash...")
@@ -119,29 +119,29 @@ if st.button("Start Financial Data Processing"):
 
         # --- Step 3: Merging Excel Files (from 2_excel_merger.ipynb) ---
         output_area.write("### Step 3: Merging Excel Files...")
-        # try:
-        #     merger_log = run_merger_process(company_folder_name, periods_to_process)
-        #     output_area.markdown(f"```\n{merger_log}\n```")
-        # except Exception as e:
-        #     st.error(f"Error during Excel merging: {e}")
-        #     st.stop()
+        try:
+            merger_log = run_merger_process(company_folder_name, periods_to_process)
+            output_area.markdown(f"```\n{merger_log}\n```")
+        except Exception as e:
+            st.error(f"Error during Excel merging: {e}")
+            st.stop()
 
         # --- Step 4: Formatting Excel Files (from 3_excel_formatter.ipynb) ---
         output_area.write("### Step 4: Formatting Excel Files...")
-        # try:
-        #     formatter_log = run_formatter_process(company_folder_name)
-        #     output_area.markdown(f"```\n{formatter_log}\n```")
-        # except Exception as e:
-        #     st.error(f"Error during Excel formatting: {e}")
-        #     st.stop()
+        try:
+            formatter_log = run_formatter_process(company_folder_name)
+            output_area.markdown(f"```\n{formatter_log}\n```")
+        except Exception as e:
+            st.error(f"Error during Excel formatting: {e}")
+            st.stop()
 
         # --- Step 5: Standardizing Excel Files (from 4_excel_standardization.ipynb) ---
         output_area.write("### Step 5: Standardizing Excel Files...")
-        # try:
-        #     standardizer_log = run_standardizer_process(company_folder_name)
-        #     output_area.markdown(f"```\n{standardizer_log}\n```")
-        # except Exception as e:
-        #     st.error(f"Error during Excel standardization: {e}")
-        #     st.stop()
+        try:
+            standardizer_log = run_standardizer_process(company_folder_name)
+            output_area.markdown(f"```\n{standardizer_log}\n```")
+        except Exception as e:
+            st.error(f"Error during Excel standardization: {e}")
+            st.stop()
 
         st.success("Workflow completed successfully!")
