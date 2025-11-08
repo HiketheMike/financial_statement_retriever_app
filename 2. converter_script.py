@@ -10,6 +10,23 @@ import re
 # Define the GitHub repository name for display purposes
 REPO_NAME = "financial_statement_retriever_app"
 
+# Helper to format path for display
+def format_github_path(p: Path):
+    # Get the string representation of the path
+    path_str = str(p)
+    
+    # If it starts with the current working directory, remove that prefix
+    cwd_str = str(Path.cwd())
+    if path_str.startswith(cwd_str):
+        # Remove the cwd prefix, and handle potential separator differences
+        path_str = path_str[len(cwd_str):].lstrip(os.sep).lstrip('/')
+    
+    # Ensure forward slashes for GitHub style
+    path_str = path_str.replace('\\', '/')
+    
+    # Prepend REPO_NAME
+    return f"{REPO_NAME}/{path_str}"
+
 # --- Helper function to extract text from a specific page range ---
 def extract_pages(text_content, start_page=None, end_page=None):
     if start_page is None and end_page is None:
@@ -67,16 +84,12 @@ def run_converter_process(company_folder_name, periods_to_process, extraction_me
         output_json_file_path = json_dir / f"{period}_financial_statements_raw.json"
         output_excel_file_path = excel_dir / f"{period}_financial_statements.xlsx"
 
-        # Helper to format path for display
-        def format_github_path(p: Path):
-            return f"{REPO_NAME}/{str(p).replace('\\', '/')}"
-
         status_message = f"Processing period: {period}"
         print(status_message)
         results.append(status_message)
 
         if not ocr_text_file_path.exists():
-            # Changed: Use format_github_path for display
+            # Changed: Use the refined format_github_path for display
             error_message = f"Error: OCR text file not found for {period} at {format_github_path(ocr_text_file_path)}. Skipping LLM extraction for this period."
             print(error_message)
             results.append(error_message)
@@ -86,7 +99,7 @@ def run_converter_process(company_folder_name, periods_to_process, extraction_me
             with ocr_text_file_path.open("r", encoding="utf-8") as f:
                 ocr_content = f.read()
         except Exception as e:
-            # Changed: Use format_github_path for display
+            # Changed: Use the refined format_github_path for display
             error_message = f"Error reading OCR text file for {period} at {format_github_path(ocr_text_file_path)}: {e}. Skipping LLM extraction."
             print(error_message)
             results.append(error_message)
@@ -112,7 +125,7 @@ def run_converter_process(company_folder_name, periods_to_process, extraction_me
 
             with output_json_file_path.open("w", encoding="utf-8") as f:
                 f.write(llm_response)
-            # Changed: Use format_github_path for display
+            # Changed: Use the refined format_github_path for display
             status_message = f"Successfully saved raw LLM output for {period} to: {format_github_path(output_json_file_path)}"
             results.append(status_message)
 
@@ -146,7 +159,7 @@ def run_converter_process(company_folder_name, periods_to_process, extraction_me
                     df['year'] = df['year'].astype(str)
 
                 df.to_excel(output_excel_file_path, index=False)
-                # Changed: Use format_github_path for display
+                # Changed: Use the refined format_github_path for display
                 results.append(f"Successfully extracted {len(df)} financial items for {period}, cleaned, and saved to: {format_github_path(output_excel_file_path)}")
                 processed_any_period = True # Mark as successful for at least one period
             else:

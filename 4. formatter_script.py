@@ -5,6 +5,23 @@ import os
 # Define the GitHub repository name for display purposes
 REPO_NAME = "financial_statement_retriever_app"
 
+# Helper to format path for display
+def format_github_path(p: Path):
+    # Get the string representation of the path
+    path_str = str(p)
+    
+    # If it starts with the current working directory, remove that prefix
+    cwd_str = str(Path.cwd())
+    if path_str.startswith(cwd_str):
+        # Remove the cwd prefix, and handle potential separator differences
+        path_str = path_str[len(cwd_str):].lstrip(os.sep).lstrip('/')
+    
+    # Ensure forward slashes for GitHub style
+    path_str = path_str.replace('\\', '/')
+    
+    # Prepend REPO_NAME
+    return f"{REPO_NAME}/{path_str}"
+
 def run_formatter_process(company_folder_name, periods_to_process):
     company_base_path = Path(company_folder_name)
     period_statements_dir = company_base_path / "period_statements"
@@ -17,17 +34,13 @@ def run_formatter_process(company_folder_name, periods_to_process):
 
     all_periods_file_path = period_statements_dir / "all_periods_concatenated.xlsx"
     
-    # Helper to format path for display
-    def format_github_path(p: Path):
-        return f"{REPO_NAME}/{str(p).replace('\\', '/')}"
-
     if not all_periods_file_path.exists():
-        # Changed: Use format_github_path for display
+        # Changed: Use the refined format_github_path for display
         msg = f"Error: Combined file '{format_github_path(all_periods_file_path)}' not found. Cannot proceed with formatting."
         results.append(msg)
         raise FileNotFoundError(msg)
 
-    # Changed: Use format_github_path for display
+    # Changed: Use the refined format_github_path for display
     results.append(f"\nProcessing combined file: {format_github_path(all_periods_file_path)}")
     
     processed_any_statement = False
@@ -36,7 +49,7 @@ def run_formatter_process(company_folder_name, periods_to_process):
 
         required_columns = ['item', 'year', 'value', 'statement_type']
         if not all(col in df_long.columns for col in required_columns):
-            # Changed: Use format_github_path for display
+            # Changed: Use the refined format_github_path for display
             msg = f"Error: Skipping {format_github_path(all_periods_file_path)} — missing required columns ({', '.join(required_columns)}). Cannot format."
             results.append(msg)
             raise ValueError(msg)
@@ -76,11 +89,11 @@ def run_formatter_process(company_folder_name, periods_to_process):
 
                 output_file = final_statements_dir / f"{st_type}.xlsx"
                 df_wide.to_excel(output_file)
-                # Changed: Use format_github_path for display
+                # Changed: Use the refined format_github_path for display
                 results.append(f"Successfully reformatted and saved '{st_type}' to: {format_github_path(output_file)}")
                 processed_any_statement = True
     except Exception as e:
-        # Changed: Use format_github_path for display
+        # Changed: Use the refined format_github_path for display
         results.append(f"Error processing {format_github_path(all_periods_file_path)}: {e}")
         raise # Re-raise the exception
 

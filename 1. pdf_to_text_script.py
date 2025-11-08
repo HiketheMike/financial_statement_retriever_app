@@ -13,6 +13,23 @@ REPO_NAME = "financial_statement_retriever_app"
 # For local Windows development, uncomment and set your Tesseract path:
 # pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
+# Helper to format path for display
+def format_github_path(p: Path):
+    # Get the string representation of the path
+    path_str = str(p)
+    
+    # If it starts with the current working directory, remove that prefix
+    cwd_str = str(Path.cwd())
+    if path_str.startswith(cwd_str):
+        # Remove the cwd prefix, and handle potential separator differences
+        path_str = path_str[len(cwd_str):].lstrip(os.sep).lstrip('/')
+    
+    # Ensure forward slashes for GitHub style
+    path_str = path_str.replace('\\', '/')
+    
+    # Prepend REPO_NAME
+    return f"{REPO_NAME}/{path_str}"
+
 def run_pdf_to_text_process(company_folder_name, periods_to_process, extraction_method):
     company_base_path = Path(company_folder_name)
     base_pdf_dir = company_base_path / "financial_statements"
@@ -28,18 +45,14 @@ def run_pdf_to_text_process(company_folder_name, periods_to_process, extraction_
         pdf_path = base_pdf_dir / f"{period}.pdf"
         out_txt = ocr_dir / f"{period}_ocr.txt"
 
-        # Helper to format path for display
-        def format_github_path(p: Path):
-            return f"{REPO_NAME}/{str(p).replace('\\', '/')}"
-
         if not pdf_path.exists():
-            # Changed: Use format_github_path for display
+            # Changed: Use the refined format_github_path for display
             error_message = f"Warning: PDF file not found for {period} at {format_github_path(pdf_path)}. Skipping text extraction for this period."
             print(error_message)
             results.append(error_message)
             continue
 
-        # Changed: Use format_github_path for display
+        # Changed: Use the refined format_github_path for display
         status_message = f"\nProcessing PDF for period: {period} ({format_github_path(pdf_path)}) using {extraction_method.upper()}..."
         print(status_message)
         results.append(status_message)
@@ -61,14 +74,14 @@ def run_pdf_to_text_process(company_folder_name, periods_to_process, extraction_
 
                     fout.write(f"--- PAGE {pageno+1} ---\n")
                     fout.write(text + "\n\n")
-            # Changed: Use format_github_path for display
+            # Changed: Use the refined format_github_path for display
             status_message = f"Text output for {period} saved to: {format_github_path(out_txt)}"
             print(status_message)
             results.append(status_message)
             processed_any_pdf = True # Mark as successful for at least one PDF
 
         except Exception as e:
-            # Changed: Use format_github_path for display
+            # Changed: Use the refined format_github_path for display
             error_message = f"An error occurred during {extraction_method.upper()} for {period} at {format_github_path(pdf_path)}: {e}. Skipping this period."
             print(error_message)
             results.append(error_message)
