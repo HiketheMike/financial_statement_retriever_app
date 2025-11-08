@@ -5,22 +5,12 @@ import io
 from pathlib import Path
 import os
 
-# point to your tesseract exe if not in PATH
 # For Streamlit Community Cloud deployment, this line should be commented out
 # as Tesseract will be installed as a system package and pytesseract will find it.
+# For local Windows development, uncomment and set your Tesseract path:
 # pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
-# The try-except block for local Tesseract path is also not needed for cloud deployment
-# as Tesseract is installed via packages.txt.
-# try:
-#     pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-# except pytesseract.TesseractNotFoundError:
-#     print("Tesseract-OCR is not found in the specified path or system PATH. OCR functionality may not work.")
-#     print("Please install Tesseract-OCR or update the path in pdf_to_text_script.py.")
-
-
 def run_pdf_to_text_process(company_folder_name, periods_to_process, extraction_method):
-    # Change: Use Path(company_folder_name) to make it relative to the repo root
     company_base_path = Path(company_folder_name)
     base_pdf_dir = company_base_path / "financial_statements"
     ocr_dir = company_base_path / "text_statements"
@@ -30,6 +20,7 @@ def run_pdf_to_text_process(company_folder_name, periods_to_process, extraction_
     results = []
     results.append(f"--- Starting PDF Text Extraction Process ({extraction_method.upper()} method) ---")
 
+    processed_any_pdf = False # Track if any PDF was successfully processed
     for period in periods_to_process:
         pdf_path = base_pdf_dir / f"{period}.pdf"
         out_txt = ocr_dir / f"{period}_ocr.txt"
@@ -64,6 +55,7 @@ def run_pdf_to_text_process(company_folder_name, periods_to_process, extraction_
             status_message = f"Text output for {period} saved to: {out_txt}"
             print(status_message)
             results.append(status_message)
+            processed_any_pdf = True # Mark as successful for at least one PDF
 
         except Exception as e:
             error_message = f"An error occurred during {extraction_method.upper()} for {period} at {pdf_path}: {e}. Skipping this period."
@@ -74,4 +66,8 @@ def run_pdf_to_text_process(company_folder_name, periods_to_process, extraction_
                 doc.close()
     
     results.append("\n--- PDF Text Extraction Process Complete ---")
+    
+    if not processed_any_pdf:
+        raise ValueError("No PDF files were successfully processed into text. Please check PDF paths and content.")
+        
     return "\n".join(results)

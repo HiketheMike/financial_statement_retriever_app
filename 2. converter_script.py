@@ -33,8 +33,6 @@ def extract_pages(text_content, start_page=None, end_page=None):
     return "\n".join(filtered_lines)
 
 def run_converter_process(company_folder_name, periods_to_process, extraction_method, start_page, end_page):
-    # Ensure GOOGLE_API_KEY is set in the environment or passed securely
-    # Change: Use Path(company_folder_name) to make it relative to the repo root
     company_base_path = Path(company_folder_name)
     json_dir = company_base_path / "json_statements"
     excel_dir = company_base_path / "excel_statements"
@@ -60,9 +58,11 @@ def run_converter_process(company_folder_name, periods_to_process, extraction_me
     chain = prompt_template | llm | output_parser
 
     results = []
+    processed_any_period = False # Track if any period was successfully processed
     for period in periods_to_process:
         ocr_text_file_path = ocr_dir / f"{period}_ocr.txt"
         output_json_file_path = json_dir / f"{period}_financial_statements_raw.json"
+        output_excel_file_path = excel_dir / f"{period}_financial_statements.xlsx"
 
         status_message = f"Processing period: {period}"
         print(status_message)
@@ -91,6 +91,7 @@ def run_converter_process(company_folder_name, periods_to_process, extraction_me
             results.append(warning_message)
             continue
 
+        llm_response = None
         try:
             status_message = f"Sending text for {period} (pages {start_page}-{end_page} if specified) to Gemini 2.5 Flash for extraction..."
             print(status_message)
@@ -103,14 +104,54 @@ def run_converter_process(company_folder_name, periods_to_process, extraction_me
             with output_json_file_path.open("w", encoding="utf-8") as f:
                 f.write(llm_response)
             status_message = f"Successfully saved raw LLM output for {period} to: {output_json_file_path}"
-            print(status_message)
             results.append(status_message)
 
+            # --- Convert to Pandas DataFrame and Save to Excel ---
+            cleaned_json_string = llm_response.strip()
+            if cleaned_json_string.startswith("```json"):
+                cleaned_json_string = cleaned_json_string[len("```json"):].strip()
+            if cleaned_json_string.endswith("```"):
+                cleaned_json_string = cleaned_json_string[:-len("```")].strip()
+
+            extracted_data = json.loads(cleaned_json_string)
+
+            if not isinstance(extracted_data, list):
+                results.append(f"Warning: Parsed JSON for {period} was not a simple array. Attempting to recover.")
+                if isinstance(extracted_data, dict) and "financial_statements" in extracted_data:
+                    extracted_data = extracted_data["financial_statements"]
+                elif isinstance(extracted_data, dict) and "data" in extracted_data:
+                    extracted_data = extracted_data["data"]
+                else:
+                    extracted_data = []
+
+            if extracted_data:
+                df = pd.DataFrame(extracted_data)
+                if 'value' in df.columns:
+                    df['value'] = df['value'].astype(str).str.replace(',', '').str.strip()
+                    df['value'] = pd.to_numeric(df['value'], errors='coerce')
+                
+                if 'year' not in df.columns:
+                    df['year'] = period
+                else:
+                    df['year'] = df['year'].astype(str)
+
+                df.to_excel(output_excel_file_path, index=False)
+                results.append(f"Successfully extracted {len(df)} financial items for {period}, cleaned, and saved to: {output_excel_file_path}")
+                processed_any_period = True # Mark as successful for at least one period
+            else:
+                results.append(f"No financial data was extracted or parsed successfully for {period}. Excel file not created.")
+
+        except json.JSONDecodeError as e:
+            results.append(f"Error decoding JSON from LLM response for {period}: {e}")
+            results.append(f"LLM Response (raw):\n{llm_response}")
         except Exception as e:
-            error_message = f"An error occurred during LLM invocation for {period}: {e}"
+            error_message = f"An error occurred during LLM invocation or Excel conversion for {period}: {e}"
             print(error_message)
             results.append(error_message)
-            continue
-    
+
     results.append("\n--- LLM Extraction Process Complete ---")
+    
+    if not processed_any_period:
+        raise ValueError("No financial data was successfully extracted and converted to Excel for any period.")
+        
     return "\n".join(results)

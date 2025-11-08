@@ -7,8 +7,6 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
 def run_standardizer_process(company_folder_name):
-    # Ensure GOOGLE_API_KEY is set in the environment or passed securely
-    # Change: Use Path(company_folder_name) to make it relative to the repo root
     company_base_path = Path(company_folder_name)
     input_dir = company_base_path / "final_statements"
     output_dir = company_base_path / "final_statements_standardized"
@@ -39,7 +37,11 @@ def run_standardizer_process(company_folder_name):
     results = []
     results.append("--- Starting Financial Statement Item Standardization ---")
 
+    found_files_to_standardize = False
+    processed_any_file_successfully = False
+
     for file_path in input_dir.glob("*.xlsx"):
+        found_files_to_standardize = True
         results.append(f"\nProcessing file for standardization: {file_path.name}")
         try:
             df_wide = pd.read_excel(file_path, index_col=0)
@@ -89,14 +91,20 @@ def run_standardizer_process(company_folder_name):
             results.append(f"  Successfully standardized and saved '{file_path.name}' to: {output_file_path}")
             results.append(f"  Final standardized DataFrame shape: {df_standardized.shape}")
             results.append(f"  Final standardized DataFrame head:\n{df_standardized.head().to_string()}")
+            processed_any_file_successfully = True
 
         except json.JSONDecodeError as e:
             results.append(f"  ERROR: JSON decoding failed for LLM response for {file_path.name}: {e}")
             results.append(f"  LLM Response (raw):\n{llm_response}")
-            continue
+            # Do not re-raise here, allow other files to be processed
         except Exception as e:
             results.append(f"  ERROR processing {file_path.name}: {e}")
-            continue
+            # Do not re-raise here, allow other files to be processed
+
+    if not found_files_to_standardize:
+        raise FileNotFoundError(f"No Excel files found in '{input_dir}' to standardize. Please ensure previous steps completed.")
+    if not processed_any_file_successfully:
+        raise ValueError("No financial statements were successfully standardized. Check logs for errors.")
 
     results.append("\n--- Financial Statement Item Standardization Complete ---")
     return "\n".join(results)

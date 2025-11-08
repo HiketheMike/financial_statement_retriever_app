@@ -4,7 +4,6 @@ from pathlib import Path
 import os
 
 def run_merger_process(company_folder_name, periods_to_process):
-    # Change: Use Path(company_folder_name) to make it relative to the repo root
     company_base_path = Path(company_folder_name)
     base_dir = company_base_path / "excel_statements"
     period_statements_dir = company_base_path / "period_statements"
@@ -34,8 +33,9 @@ def run_merger_process(company_folder_name, periods_to_process):
     if found_files_count > 0:
         results.append(f'Successfully read in {found_files_count} years of financial statements in Excel \n')
     else:
-        results.append(f'No financial statements were successfully read from Excel files. Please check paths and file existence.')
-        return "\n".join(results) # Exit early if no files found
+        msg = f'No financial statements were successfully read from Excel files. Please check paths and file existence.'
+        results.append(msg)
+        raise ValueError(msg) # Raise error if no files found
 
     row_length = sum(len(df_statement) for df_statement in financial_statements)
     concatenated_df = pd.concat(financial_statements, ignore_index=True)
@@ -44,6 +44,7 @@ def run_merger_process(company_folder_name, periods_to_process):
         results.append(f'1) SUCCESS: Concatenated successfully dataframes from all periods. Total rows: {len(concatenated_df)}')
     else:
         results.append(f'1) ERROR: There are missing rows or an issue during concatenation. Expected {row_length} rows, got {len(concatenated_df)}.')
+        # This is a warning, not necessarily a hard stop, but could be upgraded to an error if desired.
 
     if 'statement_type' in concatenated_df.columns:
         concatenated_df['statement_type'] = concatenated_df['statement_type'].astype(str).str.title()
@@ -56,6 +57,7 @@ def run_merger_process(company_folder_name, periods_to_process):
         results.append(f"Successfully saved full concatenated DataFrame to: {full_concatenated_output_path}")
     except Exception as e:
         results.append(f"ERROR: Could not save full concatenated DataFrame: {e}")
+        raise # Re-raise the exception if saving fails
     results.append("------------------------------------------")
 
     results.append(f"\n{' SEPARATING BY STATEMENT TYPE AND SAVING ':=^100}")
@@ -64,16 +66,21 @@ def run_merger_process(company_folder_name, periods_to_process):
     
     if len(unique_statement_types) > 0:
         results.append(f"Found {len(unique_statement_types)} unique statement types: {', '.join(unique_statement_types)}")
+        processed_any_statement_type = False
         for st_type in unique_statement_types:
             df_filtered = concatenated_df[concatenated_df['statement_type'] == st_type].copy()
             output_file_path = period_statements_dir / f"{st_type}.xlsx"
             try:
                 df_filtered.to_excel(output_file_path, index=False)
                 results.append(f"  - Successfully saved '{st_type}' to: {output_file_path}")
+                processed_any_statement_type = True
             except Exception as e:
                 results.append(f"  - ERROR: Could not save '{st_type}' to {output_file_path}: {e}")
+        if not processed_any_statement_type:
+            raise ValueError("No individual statement type files could be saved after concatenation.")
     else:
         results.append("No unique 'statement_type' found in the concatenated data. No individual files created.")
+        raise ValueError("No unique 'statement_type' found in the concatenated data.")
 
     results.append("\n--- Statement Separation and Saving Complete ---")
     return "\n".join(results)
