@@ -1,10 +1,17 @@
-# Step 1: 
+import fitz         # PyMuPDF
+from PIL import Image
+import pytesseract  # <--- ADD THIS IMPORT
+import io
+from pathlib import Path
+import os
+
 # point to your tesseract exe if not in PATH
 # Ensure this path is correct for your system
-# Example: pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 # If Tesseract is in your system's PATH, this line might not be strictly necessary.
 # However, it's good practice to explicitly set it for robustness.
 
+# REMOVE or COMMENT OUT THIS LINE FOR CLOUD DEPLOYMENT:
 # try:
 #     pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 # except pytesseract.TesseractNotFoundError:
@@ -67,4 +74,3 @@ def run_pdf_to_text_process(company_folder_name, periods_to_process, extraction_
     
     results.append("\n--- PDF Text Extraction Process Complete ---")
     return "\n".join(results)
-

@@ -1,4 +1,2 @@
-# filepath: d:\Visual Studio Projects\Financial Statement Data Retriever\packages.txt
 tesseract-ocr
 tesseract-ocr-vie # Install the Vietnamese language pack
-# Add other language packs if needed, e.g., tesseract-ocr-eng for English
