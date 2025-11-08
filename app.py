@@ -3,12 +3,11 @@ from pathlib import Path
 import os
 
 # Import your refactored scripts
-# Make sure these files (e.g., converter_script.py) are in the same directory as app.py
-# or in a directory included in your Python path.
+from pdf_to_text_script import run_pdf_to_text_process
 from converter_script import run_converter_process
-# from merger_script import run_merger_process
-# from formatter_script import run_formatter_process
-# from standardizer_script import run_standardizer_process
+from merger_script import run_merger_process
+from formatter_script import run_formatter_process
+from standardizer_script import run_standardizer_process
 
 st.set_page_config(layout="wide")
 st.title("📊 Financial Statement Data Retriever")
@@ -59,11 +58,17 @@ if page_range_input:
     except ValueError:
         st.warning("Invalid page number in range. Processing all pages.")
 
-# --- Google API Key (Optional, if not set as environment variable) ---
-# You might want to add a text input for the API key if it's not an environment variable
-# google_api_key = st.text_input("Enter your Google API Key (optional, if not set as env var):", type="password")
-# if google_api_key:
-os.environ["GOOGLE_API_KEY"] = "AIzaSyBAAP0sKv5nJOGySzVmd66I23vUDtjjI-s"
+# --- Google API Key Input ---
+# It's highly recommended to set GOOGLE_API_KEY as an environment variable
+# for production or public deployment. For local testing, you can uncomment
+# the line below and input it, but be careful not to commit it.
+google_api_key = st.text_input("Enter your Google API Key (required for LLM steps):", type="password")
+if google_api_key:
+    os.environ["GOOGLE_API_KEY"] = google_api_key
+else:
+    # If not provided in input, try to get from environment
+    if "GOOGLE_API_KEY" not in os.environ:
+        st.warning("Google API Key not provided. Please enter it or set as an environment variable.")
 
 
 st.markdown("---")
@@ -74,6 +79,8 @@ if st.button("Start Financial Data Processing"):
         st.error("Please enter a company folder name.")
     elif not periods_to_process:
         st.error("Please enter at least one period to process.")
+    elif "GOOGLE_API_KEY" not in os.environ or not os.environ["GOOGLE_API_KEY"]:
+        st.error("Google API Key is required to run LLM-based steps. Please provide it.")
     else:
         st.info("Starting the financial data processing workflow...")
         
@@ -89,18 +96,16 @@ if st.button("Start Financial Data Processing"):
 
         # --- Step 1: PDF to Text (OCR or Direct) ---
         output_area.write("### Step 1: Converting PDF to Text files...")
-        # You would call your refactored PDF to text function here
-        # For now, we'll simulate it or call the converter_script's first part
-        # Assuming you have a `run_pdf_to_text_process` function in `pdf_to_text_script.py`
-        # For this example, we'll just use the `run_converter_process` which includes LLM extraction
-        
-        # Placeholder for PDF to Text (if separated from LLM extraction)
         try:
-            pdf_to_text_log = run_pdf_to_text_process(company_folder_name, periods_to_process, extraction_method)
-            output_area.write(pdf_to_text_log)
+            pdf_to_text_log = run_pdf_to_text_process(
+                company_folder_name, 
+                periods_to_process, 
+                extraction_method.lower()
+            )
+            output_area.markdown(f"```\n{pdf_to_text_log}\n```")
         except Exception as e:
             st.error(f"Error in PDF to Text conversion: {e}")
-            st.stop() # Stop execution if this critical step fails
+            st.stop()
 
         # --- Step 2: LLM Extraction (from 1_test_converter.ipynb) ---
         output_area.write("### Step 2: Extracting data using Gemini 2.5 Flash...")
@@ -108,11 +113,11 @@ if st.button("Start Financial Data Processing"):
             llm_extraction_log = run_converter_process(
                 company_folder_name, 
                 periods_to_process, 
-                extraction_method.lower(), # Pass 'ocr' or 'direct'
+                extraction_method.lower(),
                 start_page, 
                 end_page
             )
-            output_area.markdown(f"```\n{llm_extraction_log}\n```") # Display log in a code block
+            output_area.markdown(f"```\n{llm_extraction_log}\n```")
         except Exception as e:
             st.error(f"Error during LLM data extraction: {e}")
             st.stop()
@@ -129,7 +134,7 @@ if st.button("Start Financial Data Processing"):
         # --- Step 4: Formatting Excel Files (from 3_excel_formatter.ipynb) ---
         output_area.write("### Step 4: Formatting Excel Files...")
         try:
-            formatter_log = run_formatter_process(company_folder_name)
+            formatter_log = run_formatter_process(company_folder_name, periods_to_process)
             output_area.markdown(f"```\n{formatter_log}\n```")
         except Exception as e:
             st.error(f"Error during Excel formatting: {e}")
