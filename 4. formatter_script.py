@@ -15,11 +15,13 @@ def run_formatter_process(company_folder_name, periods_to_process):
     all_periods_file_path = period_statements_dir / "all_periods_concatenated.xlsx"
     
     if not all_periods_file_path.exists():
-        msg = f"Error: Combined file '{all_periods_file_path.name}' not found. Cannot proceed with formatting."
+        # Changed: Force backslashes in output path
+        msg = f"Error: Combined file '{str(all_periods_file_path.name).replace('/', '\\')}' not found. Cannot proceed with formatting."
         results.append(msg)
         raise FileNotFoundError(msg)
 
-    results.append(f"\nProcessing combined file: {all_periods_file_path.name}")
+    # Changed: Force backslashes in output path
+    results.append(f"\nProcessing combined file: {str(all_periods_file_path.name).replace('/', '\\')}")
     
     processed_any_statement = False
     try:
@@ -27,7 +29,8 @@ def run_formatter_process(company_folder_name, periods_to_process):
 
         required_columns = ['item', 'year', 'value', 'statement_type']
         if not all(col in df_long.columns for col in required_columns):
-            msg = f"Error: Skipping {all_periods_file_path.name} — missing required columns ({', '.join(required_columns)}). Cannot format."
+            # Changed: Force backslashes in output path
+            msg = f"Error: Skipping {str(all_periods_file_path.name).replace('/', '\\')} — missing required columns ({', '.join(required_columns)}). Cannot format."
             results.append(msg)
             raise ValueError(msg)
         else:
@@ -66,10 +69,12 @@ def run_formatter_process(company_folder_name, periods_to_process):
 
                 output_file = final_statements_dir / f"{st_type}.xlsx"
                 df_wide.to_excel(output_file)
-                results.append(f"Successfully reformatted and saved '{st_type}' to: {output_file}")
+                # Changed: Force backslashes in output path
+                results.append(f"Successfully reformatted and saved '{st_type}' to: {str(output_file).replace('/', '\\')}")
                 processed_any_statement = True
     except Exception as e:
-        results.append(f"Error processing {all_periods_file_path.name}: {e}")
+        # Changed: Force backslashes in output path
+        results.append(f"Error processing {str(all_periods_file_path.name).replace('/', '\\')}: {e}")
         raise # Re-raise the exception
 
     if not processed_any_statement:

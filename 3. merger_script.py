@@ -18,7 +18,8 @@ def run_merger_process(company_folder_name, periods_to_process):
     for period in periods_to_process:
         statement_path = base_dir / f"{period}_financial_statements.xlsx"
         if not statement_path.exists():
-            msg = f'Warning: Excel file not found for period {period} at {statement_path}. Skipping this period.'
+            # Changed: Force backslashes in output path
+            msg = f'Warning: Excel file not found for period {period} at {str(statement_path).replace("/", "\\")}. Skipping this period.'
             results.append(msg)
             continue
         try:
@@ -26,7 +27,8 @@ def run_merger_process(company_folder_name, periods_to_process):
             financial_statements.append(df_statement)
             found_files_count += 1
         except Exception as e:
-            msg = f'Error reading {statement_path}: {e}. Skipping this period.'
+            # Changed: Force backslashes in output path
+            msg = f'Error reading {str(statement_path).replace("/", "\\")}: {e}. Skipping this period.'
             results.append(msg)
             continue
 
@@ -54,7 +56,8 @@ def run_merger_process(company_folder_name, periods_to_process):
     full_concatenated_output_path = period_statements_dir / "all_periods_concatenated.xlsx"
     try:
         concatenated_df.to_excel(full_concatenated_output_path, index=False)
-        results.append(f"Successfully saved full concatenated DataFrame to: {full_concatenated_output_path}")
+        # Changed: Force backslashes in output path
+        results.append(f"Successfully saved full concatenated DataFrame to: {str(full_concatenated_output_path).replace('/', '\\')}")
     except Exception as e:
         results.append(f"ERROR: Could not save full concatenated DataFrame: {e}")
         raise # Re-raise the exception if saving fails
@@ -72,10 +75,12 @@ def run_merger_process(company_folder_name, periods_to_process):
             output_file_path = period_statements_dir / f"{st_type}.xlsx"
             try:
                 df_filtered.to_excel(output_file_path, index=False)
-                results.append(f"  - Successfully saved '{st_type}' to: {output_file_path}")
+                # Changed: Force backslashes in output path
+                results.append(f"  - Successfully saved '{st_type}' to: {str(output_file_path).replace('/', '\\')}")
                 processed_any_statement_type = True
             except Exception as e:
-                results.append(f"  - ERROR: Could not save '{st_type}' to {output_file_path}: {e}")
+                # Changed: Force backslashes in output path
+                results.append(f"  - ERROR: Could not save '{st_type}' to {str(output_file_path).replace('/', '\\')}: {e}")
         if not processed_any_statement_type:
             raise ValueError("No individual statement type files could be saved after concatenation.")
     else:

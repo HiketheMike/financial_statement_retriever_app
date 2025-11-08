@@ -69,7 +69,8 @@ def run_converter_process(company_folder_name, periods_to_process, extraction_me
         results.append(status_message)
 
         if not ocr_text_file_path.exists():
-            error_message = f"Error: OCR text file not found for {period} at {ocr_text_file_path}. Skipping LLM extraction for this period."
+            # Changed: Force backslashes in output path
+            error_message = f"Error: OCR text file not found for {period} at {str(ocr_text_file_path).replace('/', '\\')}. Skipping LLM extraction for this period."
             print(error_message)
             results.append(error_message)
             continue
@@ -78,7 +79,8 @@ def run_converter_process(company_folder_name, periods_to_process, extraction_me
             with ocr_text_file_path.open("r", encoding="utf-8") as f:
                 ocr_content = f.read()
         except Exception as e:
-            error_message = f"Error reading OCR text file for {period} at {ocr_text_file_path}: {e}. Skipping LLM extraction."
+            # Changed: Force backslashes in output path
+            error_message = f"Error reading OCR text file for {period} at {str(ocr_text_file_path).replace('/', '\\')}: {e}. Skipping LLM extraction."
             print(error_message)
             results.append(error_message)
             continue
@@ -103,7 +105,8 @@ def run_converter_process(company_folder_name, periods_to_process, extraction_me
 
             with output_json_file_path.open("w", encoding="utf-8") as f:
                 f.write(llm_response)
-            status_message = f"Successfully saved raw LLM output for {period} to: {output_json_file_path}"
+            # Changed: Force backslashes in output path
+            status_message = f"Successfully saved raw LLM output for {period} to: {str(output_json_file_path).replace('/', '\\')}"
             results.append(status_message)
 
             # --- Convert to Pandas DataFrame and Save to Excel ---
@@ -136,7 +139,8 @@ def run_converter_process(company_folder_name, periods_to_process, extraction_me
                     df['year'] = df['year'].astype(str)
 
                 df.to_excel(output_excel_file_path, index=False)
-                results.append(f"Successfully extracted {len(df)} financial items for {period}, cleaned, and saved to: {output_excel_file_path}")
+                # Changed: Force backslashes in output path
+                results.append(f"Successfully extracted {len(df)} financial items for {period}, cleaned, and saved to: {str(output_excel_file_path).replace('/', '\\')}")
                 processed_any_period = True # Mark as successful for at least one period
             else:
                 results.append(f"No financial data was extracted or parsed successfully for {period}. Excel file not created.")

@@ -26,12 +26,14 @@ def run_pdf_to_text_process(company_folder_name, periods_to_process, extraction_
         out_txt = ocr_dir / f"{period}_ocr.txt"
 
         if not pdf_path.exists():
-            error_message = f"Warning: PDF file not found for {period} at {pdf_path}. Skipping text extraction for this period."
+            # Changed: Force backslashes in output path
+            error_message = f"Warning: PDF file not found for {period} at {str(pdf_path).replace('/', '\\')}. Skipping text extraction for this period."
             print(error_message)
             results.append(error_message)
             continue
 
-        status_message = f"\nProcessing PDF for period: {period} ({pdf_path}) using {extraction_method.upper()}..."
+        # Changed: Force backslashes in output path
+        status_message = f"\nProcessing PDF for period: {period} ({str(pdf_path).replace('/', '\\')}) using {extraction_method.upper()}..."
         print(status_message)
         results.append(status_message)
         
@@ -52,13 +54,15 @@ def run_pdf_to_text_process(company_folder_name, periods_to_process, extraction_
 
                     fout.write(f"--- PAGE {pageno+1} ---\n")
                     fout.write(text + "\n\n")
-            status_message = f"Text output for {period} saved to: {out_txt}"
+            # Changed: Force backslashes in output path
+            status_message = f"Text output for {period} saved to: {str(out_txt).replace('/', '\\')}"
             print(status_message)
             results.append(status_message)
             processed_any_pdf = True # Mark as successful for at least one PDF
 
         except Exception as e:
-            error_message = f"An error occurred during {extraction_method.upper()} for {period} at {pdf_path}: {e}. Skipping this period."
+            # Changed: Force backslashes in output path
+            error_message = f"An error occurred during {extraction_method.upper()} for {period} at {str(pdf_path).replace('/', '\\')}: {e}. Skipping this period."
             print(error_message)
             results.append(error_message)
         finally:
