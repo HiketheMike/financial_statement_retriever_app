@@ -59,9 +59,6 @@ if page_range_input:
         st.warning("Invalid page number in range. Processing all pages.")
 
 # --- Google API Key Input ---
-# It's highly recommended to set GOOGLE_API_KEY as an environment variable
-# for production or public deployment. For local testing, you can uncomment
-# the line below and input it, but be careful not to commit it.
 google_api_key = st.text_input("Enter your Google API Key (required for LLM steps):", type="password")
 if google_api_key:
     os.environ["GOOGLE_API_KEY"] = google_api_key
@@ -75,12 +72,16 @@ st.markdown("---")
 st.header("2. Run Workflow")
 
 if st.button("Start Financial Data Processing"):
+    # --- Initial Input Validation ---
     if not company_folder_name:
         st.error("Please enter a company folder name.")
+        st.stop() # Stop if company name is missing
     elif not periods_to_process:
         st.error("Please enter at least one period to process.")
+        st.stop() # Stop if periods are missing
     elif "GOOGLE_API_KEY" not in os.environ or not os.environ["GOOGLE_API_KEY"]:
         st.error("Google API Key is required to run LLM-based steps. Please provide it.")
+        st.stop() # Stop if API key is missing
     else:
         st.info("Starting the financial data processing workflow...")
         
@@ -92,23 +93,23 @@ if st.button("Start Financial Data Processing"):
         st.write(f"- Page Range: **{page_range_input if page_range_input else 'All Pages'}**")
         
         st.subheader("Processing Output:")
-        output_area = st.empty() # Placeholder for dynamic output
+        # Removed st.empty() - Streamlit will now append content sequentially
 
         # --- Step 1: PDF to Text (OCR or Direct) ---
-        output_area.write("### Step 1: Converting PDF to Text files...")
+        st.write("### Step 1: Converting PDF to Text files...")
         try:
             pdf_to_text_log = run_pdf_to_text_process(
                 company_folder_name, 
                 periods_to_process, 
                 extraction_method.lower()
             )
-            output_area.markdown(f"```\n{pdf_to_text_log}\n```")
+            st.markdown(f"```\n{pdf_to_text_log}\n```")
         except Exception as e:
             st.error(f"Error in PDF to Text conversion: {e}")
-            st.stop()
+            st.stop() # Stop execution if this critical step fails
 
         # --- Step 2: LLM Extraction (from 1_test_converter.ipynb) ---
-        output_area.write("### Step 2: Extracting data using Gemini 2.5 Flash...")
+        st.write("### Step 2: Extracting data using Gemini 2.5 Flash...")
         try:
             llm_extraction_log = run_converter_process(
                 company_folder_name, 
@@ -117,34 +118,34 @@ if st.button("Start Financial Data Processing"):
                 start_page, 
                 end_page
             )
-            output_area.markdown(f"```\n{llm_extraction_log}\n```")
+            st.markdown(f"```\n{llm_extraction_log}\n```")
         except Exception as e:
             st.error(f"Error during LLM data extraction: {e}")
             st.stop()
 
         # --- Step 3: Merging Excel Files (from 2_excel_merger.ipynb) ---
-        output_area.write("### Step 3: Merging Excel Files...")
+        st.write("### Step 3: Merging Excel Files...")
         try:
             merger_log = run_merger_process(company_folder_name, periods_to_process)
-            output_area.markdown(f"```\n{merger_log}\n```")
+            st.markdown(f"```\n{merger_log}\n```")
         except Exception as e:
             st.error(f"Error during Excel merging: {e}")
             st.stop()
 
         # --- Step 4: Formatting Excel Files (from 3_excel_formatter.ipynb) ---
-        output_area.write("### Step 4: Formatting Excel Files...")
+        st.write("### Step 4: Formatting Excel Files...")
         try:
             formatter_log = run_formatter_process(company_folder_name, periods_to_process)
-            output_area.markdown(f"```\n{formatter_log}\n```")
+            st.markdown(f"```\n{formatter_log}\n```")
         except Exception as e:
             st.error(f"Error during Excel formatting: {e}")
             st.stop()
 
         # --- Step 5: Standardizing Excel Files (from 4_excel_standardization.ipynb) ---
-        output_area.write("### Step 5: Standardizing Excel Files...")
+        st.write("### Step 5: Standardizing Excel Files...")
         try:
             standardizer_log = run_standardizer_process(company_folder_name)
-            output_area.markdown(f"```\n{standardizer_log}\n```")
+            st.markdown(f"```\n{standardizer_log}\n```")
         except Exception as e:
             st.error(f"Error during Excel standardization: {e}")
             st.stop()
