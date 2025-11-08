@@ -1,22 +1,13 @@
-# --- Core Data Handling ---
-pandas>=1.3.0,<3.0.0  # For data manipulation and analysis
-numpy>=1.21.0,<2.0.0  # For numerical operations, often a dependency of pandas
-
-# --- Streamlit for Web Interface ---
-streamlit>=1.0.0,<2.0.0 # For building the interactive web application
-
-# --- LLM Integration (Google Gemini via LangChain) ---
-langchain-google-genai>=0.0.10,<1.0.0 # LangChain integration for Google Gemini models
-langchain-core>=0.1.0,<1.0.0         # Core LangChain components
-
-# --- PDF Processing (if using OCR or direct text extraction) ---
-PyMuPDF>=1.23.0,<2.0.0 # 'fitz' library for PDF handling (PyMuPDF)
-Pillow>=9.0.0,<11.0.0  # For image processing, used by pytesseract
-pytesseract>=0.3.0,<1.0.0 # Python wrapper for Google's Tesseract-OCR Engine
-
-# --- Other potentially useful libraries (uncomment if you use them) ---
-matplotlib>=3.4.0,<4.0.0 # For basic plotting
-seaborn>=0.11.0,<0.14.0  # For statistical data visualization
-plotly>=5.0.0,<6.0.0     # For interactive plots
-openpyxl>=3.0.0,<4.0.0   # Required by pandas to read/write .xlsx files
-requests>=2.25.0,<3.0.0  # For making HTTP requests (e.g., to external APIs)
+pandas
+numpy
+streamlit
+langchain-google-genai
+langchain-core
+PyMuPDF
+Pillow
+pytesseract
+matplotlib
+seaborn
+plotly
+openpyxl
+requests
