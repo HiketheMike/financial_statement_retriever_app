@@ -2,6 +2,9 @@ import pandas as pd
 from pathlib import Path
 import os
 
+# Define the GitHub repository name for display purposes
+REPO_NAME = "financial_statement_retriever_app"
+
 def run_formatter_process(company_folder_name, periods_to_process):
     company_base_path = Path(company_folder_name)
     period_statements_dir = company_base_path / "period_statements"
@@ -14,14 +17,18 @@ def run_formatter_process(company_folder_name, periods_to_process):
 
     all_periods_file_path = period_statements_dir / "all_periods_concatenated.xlsx"
     
+    # Helper to format path for display
+    def format_github_path(p: Path):
+        return f"{REPO_NAME}/{str(p).replace('\\', '/')}"
+
     if not all_periods_file_path.exists():
-        # Changed: Force backslashes in output path
-        msg = f"Error: Combined file '{str(all_periods_file_path.name).replace('/', '\\')}' not found. Cannot proceed with formatting."
+        # Changed: Use format_github_path for display
+        msg = f"Error: Combined file '{format_github_path(all_periods_file_path)}' not found. Cannot proceed with formatting."
         results.append(msg)
         raise FileNotFoundError(msg)
 
-    # Changed: Force backslashes in output path
-    results.append(f"\nProcessing combined file: {str(all_periods_file_path.name).replace('/', '\\')}")
+    # Changed: Use format_github_path for display
+    results.append(f"\nProcessing combined file: {format_github_path(all_periods_file_path)}")
     
     processed_any_statement = False
     try:
@@ -29,8 +36,8 @@ def run_formatter_process(company_folder_name, periods_to_process):
 
         required_columns = ['item', 'year', 'value', 'statement_type']
         if not all(col in df_long.columns for col in required_columns):
-            # Changed: Force backslashes in output path
-            msg = f"Error: Skipping {str(all_periods_file_path.name).replace('/', '\\')} — missing required columns ({', '.join(required_columns)}). Cannot format."
+            # Changed: Use format_github_path for display
+            msg = f"Error: Skipping {format_github_path(all_periods_file_path)} — missing required columns ({', '.join(required_columns)}). Cannot format."
             results.append(msg)
             raise ValueError(msg)
         else:
@@ -69,12 +76,12 @@ def run_formatter_process(company_folder_name, periods_to_process):
 
                 output_file = final_statements_dir / f"{st_type}.xlsx"
                 df_wide.to_excel(output_file)
-                # Changed: Force backslashes in output path
-                results.append(f"Successfully reformatted and saved '{st_type}' to: {str(output_file).replace('/', '\\')}")
+                # Changed: Use format_github_path for display
+                results.append(f"Successfully reformatted and saved '{st_type}' to: {format_github_path(output_file)}")
                 processed_any_statement = True
     except Exception as e:
-        # Changed: Force backslashes in output path
-        results.append(f"Error processing {str(all_periods_file_path.name).replace('/', '\\')}: {e}")
+        # Changed: Use format_github_path for display
+        results.append(f"Error processing {format_github_path(all_periods_file_path)}: {e}")
         raise # Re-raise the exception
 
     if not processed_any_statement:

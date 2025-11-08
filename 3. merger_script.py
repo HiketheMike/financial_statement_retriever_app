@@ -3,6 +3,9 @@ import numpy as np
 from pathlib import Path
 import os
 
+# Define the GitHub repository name for display purposes
+REPO_NAME = "financial_statement_retriever_app"
+
 def run_merger_process(company_folder_name, periods_to_process):
     company_base_path = Path(company_folder_name)
     base_dir = company_base_path / "excel_statements"
@@ -13,13 +16,17 @@ def run_merger_process(company_folder_name, periods_to_process):
     results = []
     results.append(f"{' BEGINNING CONCATENATING EACH PERIODS ':=^100}")
 
+    # Helper to format path for display
+    def format_github_path(p: Path):
+        return f"{REPO_NAME}/{str(p).replace('\\', '/')}"
+
     financial_statements = []
     found_files_count = 0
     for period in periods_to_process:
         statement_path = base_dir / f"{period}_financial_statements.xlsx"
         if not statement_path.exists():
-            # Changed: Force backslashes in output path
-            msg = f'Warning: Excel file not found for period {period} at {str(statement_path).replace("/", "\\")}. Skipping this period.'
+            # Changed: Use format_github_path for display
+            msg = f'Warning: Excel file not found for period {period} at {format_github_path(statement_path)}. Skipping this period.'
             results.append(msg)
             continue
         try:
@@ -27,8 +34,8 @@ def run_merger_process(company_folder_name, periods_to_process):
             financial_statements.append(df_statement)
             found_files_count += 1
         except Exception as e:
-            # Changed: Force backslashes in output path
-            msg = f'Error reading {str(statement_path).replace("/", "\\")}: {e}. Skipping this period.'
+            # Changed: Use format_github_path for display
+            msg = f'Error reading {format_github_path(statement_path)}: {e}. Skipping this period.'
             results.append(msg)
             continue
 
@@ -56,8 +63,8 @@ def run_merger_process(company_folder_name, periods_to_process):
     full_concatenated_output_path = period_statements_dir / "all_periods_concatenated.xlsx"
     try:
         concatenated_df.to_excel(full_concatenated_output_path, index=False)
-        # Changed: Force backslashes in output path
-        results.append(f"Successfully saved full concatenated DataFrame to: {str(full_concatenated_output_path).replace('/', '\\')}")
+        # Changed: Use format_github_path for display
+        results.append(f"Successfully saved full concatenated DataFrame to: {format_github_path(full_concatenated_output_path)}")
     except Exception as e:
         results.append(f"ERROR: Could not save full concatenated DataFrame: {e}")
         raise # Re-raise the exception if saving fails
@@ -75,12 +82,12 @@ def run_merger_process(company_folder_name, periods_to_process):
             output_file_path = period_statements_dir / f"{st_type}.xlsx"
             try:
                 df_filtered.to_excel(output_file_path, index=False)
-                # Changed: Force backslashes in output path
-                results.append(f"  - Successfully saved '{st_type}' to: {str(output_file_path).replace('/', '\\')}")
+                # Changed: Use format_github_path for display
+                results.append(f"  - Successfully saved '{st_type}' to: {format_github_path(output_file_path)}")
                 processed_any_statement_type = True
             except Exception as e:
-                # Changed: Force backslashes in output path
-                results.append(f"  - ERROR: Could not save '{st_type}' to {str(output_file_path).replace('/', '\\')}: {e}")
+                # Changed: Use format_github_path for display
+                results.append(f"  - ERROR: Could not save '{st_type}' to {format_github_path(output_file_path)}: {e}")
         if not processed_any_statement_type:
             raise ValueError("No individual statement type files could be saved after concatenation.")
     else:

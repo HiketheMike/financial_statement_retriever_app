@@ -6,6 +6,9 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
+# Define the GitHub repository name for display purposes
+REPO_NAME = "financial_statement_retriever_app"
+
 def run_standardizer_process(company_folder_name):
     company_base_path = Path(company_folder_name)
     input_dir = company_base_path / "final_statements"
@@ -40,24 +43,28 @@ def run_standardizer_process(company_folder_name):
     found_files_to_standardize = False
     processed_any_file_successfully = False
 
+    # Helper to format path for display
+    def format_github_path(p: Path):
+        return f"{REPO_NAME}/{str(p).replace('\\', '/')}"
+
     for file_path in input_dir.glob("*.xlsx"):
         found_files_to_standardize = True
-        # Changed: Force backslashes in output path
-        results.append(f"\nProcessing file for standardization: {str(file_path.name).replace('/', '\\')}")
+        # Changed: Use format_github_path for display
+        results.append(f"\nProcessing file for standardization: {format_github_path(file_path)}")
         try:
             df_wide = pd.read_excel(file_path, index_col=0)
 
             if df_wide.empty:
-                # Changed: Force backslashes in output path
-                msg = f"  Warning: {str(file_path.name).replace('/', '\\')} is empty. Skipping standardization."
+                # Changed: Use format_github_path for display
+                msg = f"  Warning: {format_github_path(file_path)} is empty. Skipping standardization."
                 results.append(msg)
                 continue
 
             items_to_standardize = df_wide.index.astype(str).unique().tolist()
 
             if not items_to_standardize:
-                # Changed: Force backslashes in output path
-                msg = f"  No items found in {str(file_path.name).replace('/', '\\')} to standardize. Skipping."
+                # Changed: Use format_github_path for display
+                msg = f"  No items found in {format_github_path(file_path)} to standardize. Skipping."
                 results.append(msg)
                 continue
 
@@ -65,8 +72,8 @@ def run_standardizer_process(company_folder_name):
             
             items_list_json = json.dumps(items_to_standardize, ensure_ascii=False, indent=2)
             llm_response = chain.invoke({"items_list_json": items_list_json})
-            # Changed: Force backslashes in output path
-            results.append(f"  Received standardization mapping from Gemini for {str(file_path.name).replace('/', '\\')}.")
+            # Changed: Use format_github_path for display
+            results.append(f"  Received standardization mapping from Gemini for {format_github_path(file_path)}.")
 
             cleaned_json_string = llm_response.strip()
             if cleaned_json_string.startswith("```json"):
@@ -92,25 +99,25 @@ def run_standardizer_process(company_folder_name):
             output_file_path = output_dir / file_path.name
             
             df_standardized.to_excel(output_file_path)
-            # Changed: Force backslashes in output path
-            results.append(f"  Successfully standardized and saved '{str(file_path.name).replace('/', '\\')}' to: {str(output_file_path).replace('/', '\\')}")
+            # Changed: Use format_github_path for display
+            results.append(f"  Successfully standardized and saved '{format_github_path(file_path)}' to: {format_github_path(output_file_path)}")
             results.append(f"  Final standardized DataFrame shape: {df_standardized.shape}")
             results.append(f"  Final standardized DataFrame head:\n{df_standardized.head().to_string()}")
             processed_any_file_successfully = True
 
         except json.JSONDecodeError as e:
-            # Changed: Force backslashes in output path
-            results.append(f"  ERROR: JSON decoding failed for LLM response for {str(file_path.name).replace('/', '\\')}: {e}")
+            # Changed: Use format_github_path for display
+            results.append(f"  ERROR: JSON decoding failed for LLM response for {format_github_path(file_path)}: {e}")
             results.append(f"  LLM Response (raw):\n{llm_response}")
             # Do not re-raise here, allow other files to be processed
         except Exception as e:
-            # Changed: Force backslashes in output path
-            results.append(f"  ERROR processing {str(file_path.name).replace('/', '\\')}: {e}")
+            # Changed: Use format_github_path for display
+            results.append(f"  ERROR processing {format_github_path(file_path)}: {e}")
             # Do not re-raise here, allow other files to be processed
 
     if not found_files_to_standardize:
-        # Changed: Force backslashes in output path
-        raise FileNotFoundError(f"No Excel files found in '{str(input_dir).replace('/', '\\')}' to standardize. Please ensure previous steps completed.")
+        # Changed: Use format_github_path for display
+        raise FileNotFoundError(f"No Excel files found in '{format_github_path(input_dir)}' to standardize. Please ensure previous steps completed.")
     if not processed_any_file_successfully:
         raise ValueError("No financial statements were successfully standardized. Check logs for errors.")
 
