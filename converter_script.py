@@ -46,7 +46,7 @@ def run_converter_process(company_folder_name, periods_to_process, extraction_me
     # Ensure GOOGLE_API_KEY is set in the environment or passed securely
     # For Streamlit, it's often better to set it as an environment variable
     # or pass it securely. This line ensures it's available for this function.
-    os.environ["GOOGLE_API_KEY"] = "AIzaSyD1f3CDdw71J98b4LEFFM6IUY893qfnqdg" # Removed hardcoded key
+    # os.environ["GOOGLE_API_KEY"] = "AIzaSyD1f3CDdw71J98b4LEFFM6IUY893qfnqdg" # Removed hardcoded key
 
     company_base_path = Path(r"D:\Visual Studio Projects\Financial Statement Data Retriever") / company_folder_name
     json_dir = company_base_path / "json_statements"
