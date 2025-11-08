@@ -1,7 +1,3 @@
-
-# Step 5: This script uses the LLM to standardize 
-# the line item names across different financial statements.
-
 import pandas as pd
 from pathlib import Path
 import os
@@ -12,10 +8,8 @@ from langchain_core.output_parsers import StrOutputParser
 
 def run_standardizer_process(company_folder_name):
     # Ensure GOOGLE_API_KEY is set in the environment or passed securely
-    # For Streamlit, it's best to set it in the Streamlit app or as an env var
-    # os.environ["GOOGLE_API_KEY"] = "YOUR_GOOGLE_API_KEY" # Removed hardcoded key
-
-    company_base_path = Path(r"D:\Visual Studio Projects\Financial Statement Data Retriever") / company_folder_name
+    # Change: Use Path(company_folder_name) to make it relative to the repo root
+    company_base_path = Path(company_folder_name)
     input_dir = company_base_path / "final_statements"
     output_dir = company_base_path / "final_statements_standardized"
 

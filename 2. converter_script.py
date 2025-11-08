@@ -1,13 +1,3 @@
-import fitz         # PyMuPDF
-from PIL import Image
-import pytesseract
-import io
-from pathlib import Path
-import os
-
-
-
-# Step 2: This script uses the LLM to extract financial data from the text files.
 import os
 import json
 import pandas as pd
@@ -44,11 +34,8 @@ def extract_pages(text_content, start_page=None, end_page=None):
 
 def run_converter_process(company_folder_name, periods_to_process, extraction_method, start_page, end_page):
     # Ensure GOOGLE_API_KEY is set in the environment or passed securely
-    # For Streamlit, it's often better to set it as an environment variable
-    # or pass it securely. This line ensures it's available for this function.
-    # os.environ["GOOGLE_API_KEY"] = "AIzaSyD1f3CDdw71J98b4LEFFM6IUY893qfnqdg" # Removed hardcoded key
-
-    company_base_path = Path(r"D:\Visual Studio Projects\Financial Statement Data Retriever") / company_folder_name
+    # Change: Use Path(company_folder_name) to make it relative to the repo root
+    company_base_path = Path(company_folder_name)
     json_dir = company_base_path / "json_statements"
     excel_dir = company_base_path / "excel_statements"
     ocr_dir = company_base_path / "text_statements"
@@ -127,4 +114,3 @@ def run_converter_process(company_folder_name, periods_to_process, extraction_me
     
     results.append("\n--- LLM Extraction Process Complete ---")
     return "\n".join(results)
-

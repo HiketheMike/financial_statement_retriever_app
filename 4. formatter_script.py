@@ -1,14 +1,10 @@
-
-
-# Step 4: This script takes the merged data, cleans values, 
-# and pivots it into a wide format (items as index, years as columns).
-
 import pandas as pd
 from pathlib import Path
 import os
 
 def run_formatter_process(company_folder_name, periods_to_process):
-    company_base_path = Path(r"D:\Visual Studio Projects\Financial Statement Data Retriever") / company_folder_name
+    # Change: Use Path(company_folder_name) to make it relative to the repo root
+    company_base_path = Path(company_folder_name)
     period_statements_dir = company_base_path / "period_statements"
     final_statements_dir = company_base_path / "final_statements"
 

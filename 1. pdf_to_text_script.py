@@ -1,17 +1,17 @@
 import fitz         # PyMuPDF
 from PIL import Image
-import pytesseract  # <--- ADD THIS IMPORT
+import pytesseract
 import io
 from pathlib import Path
 import os
 
 # point to your tesseract exe if not in PATH
-# Ensure this path is correct for your system
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-# If Tesseract is in your system's PATH, this line might not be strictly necessary.
-# However, it's good practice to explicitly set it for robustness.
+# For Streamlit Community Cloud deployment, this line should be commented out
+# as Tesseract will be installed as a system package and pytesseract will find it.
+# pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
-# REMOVE or COMMENT OUT THIS LINE FOR CLOUD DEPLOYMENT:
+# The try-except block for local Tesseract path is also not needed for cloud deployment
+# as Tesseract is installed via packages.txt.
 # try:
 #     pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 # except pytesseract.TesseractNotFoundError:
@@ -20,7 +20,8 @@ pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tessera
 
 
 def run_pdf_to_text_process(company_folder_name, periods_to_process, extraction_method):
-    company_base_path = Path(r"D:\Visual Studio Projects\Financial Statement Data Retriever") / company_folder_name
+    # Change: Use Path(company_folder_name) to make it relative to the repo root
+    company_base_path = Path(company_folder_name)
     base_pdf_dir = company_base_path / "financial_statements"
     ocr_dir = company_base_path / "text_statements"
 

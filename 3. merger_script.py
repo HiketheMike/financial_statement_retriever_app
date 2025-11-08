@@ -1,14 +1,11 @@
-# Step 3: This script merges the individual Excel files generated 
-# by the converter into a single long-format DataFrame and then separates them 
-# by statement type
-
 import pandas as pd
 import numpy as np
 from pathlib import Path
 import os
 
 def run_merger_process(company_folder_name, periods_to_process):
-    company_base_path = Path(r"D:\Visual Studio Projects\Financial Statement Data Retriever") / company_folder_name
+    # Change: Use Path(company_folder_name) to make it relative to the repo root
+    company_base_path = Path(company_folder_name)
     base_dir = company_base_path / "excel_statements"
     period_statements_dir = company_base_path / "period_statements"
 
