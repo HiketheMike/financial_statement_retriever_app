@@ -1,2 +1,2 @@
 tesseract-ocr
-tesseract-ocr-vie # Install the Vietnamese language pack
+tesseract-ocr-vie 
