@@ -1,3 +1,82 @@
+import fitz         # PyMuPDF
+from PIL import Image
+import pytesseract
+import io
+from pathlib import Path
+import os
+
+# Step 1: 
+# point to your tesseract exe if not in PATH
+# Ensure this path is correct for your system
+# Example: pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+# If Tesseract is in your system's PATH, this line might not be strictly necessary.
+# However, it's good practice to explicitly set it for robustness.
+try:
+    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+except pytesseract.TesseractNotFoundError:
+    print("Tesseract-OCR is not found in the specified path or system PATH. OCR functionality may not work.")
+    print("Please install Tesseract-OCR or update the path in pdf_to_text_script.py.")
+
+
+def run_pdf_to_text_process(company_folder_name, periods_to_process, extraction_method):
+    company_base_path = Path(r"D:\Visual Studio Projects\Financial Statement Data Retriever") / company_folder_name
+    base_pdf_dir = company_base_path / "financial_statements"
+    ocr_dir = company_base_path / "text_statements"
+
+    ocr_dir.mkdir(parents=True, exist_ok=True)
+
+    results = []
+    results.append(f"--- Starting PDF Text Extraction Process ({extraction_method.upper()} method) ---")
+
+    for period in periods_to_process:
+        pdf_path = base_pdf_dir / f"{period}.pdf"
+        out_txt = ocr_dir / f"{period}_ocr.txt"
+
+        if not pdf_path.exists():
+            error_message = f"Warning: PDF file not found for {period} at {pdf_path}. Skipping text extraction for this period."
+            print(error_message)
+            results.append(error_message)
+            continue
+
+        status_message = f"\nProcessing PDF for period: {period} ({pdf_path}) using {extraction_method.upper()}..."
+        print(status_message)
+        results.append(status_message)
+        
+        doc = None
+        try:
+            doc = fitz.open(pdf_path)
+            with out_txt.open("w", encoding="utf-8") as fout:
+                for pageno in range(len(doc)):
+                    page = doc.load_page(pageno)
+                    
+                    if extraction_method.lower() == "ocr":
+                        pix = page.get_pixmap(dpi=650)
+                        img_bytes = pix.tobytes("png")
+                        img = Image.open(io.BytesIO(img_bytes))
+                        text = pytesseract.image_to_string(img, lang="vie", config="--psm 3") # Assuming 'vie' language pack
+                    else: # extraction_method.lower() == "direct"
+                        text = page.get_text("text")
+
+                    fout.write(f"--- PAGE {pageno+1} ---\n")
+                    fout.write(text + "\n\n")
+            status_message = f"Text output for {period} saved to: {out_txt}"
+            print(status_message)
+            results.append(status_message)
+
+        except Exception as e:
+            error_message = f"An error occurred during {extraction_method.upper()} for {period} at {pdf_path}: {e}. Skipping this period."
+            print(error_message)
+            results.append(error_message)
+        finally:
+            if doc:
+                doc.close()
+    
+    results.append("\n--- PDF Text Extraction Process Complete ---")
+    return "\n".join(results)
+
+
+
+# Step 2: This script uses the LLM to extract financial data from the text files.
 import os
 import json
 import pandas as pd
@@ -33,10 +112,10 @@ def extract_pages(text_content, start_page=None, end_page=None):
     return "\n".join(filtered_lines)
 
 def run_converter_process(company_folder_name, periods_to_process, extraction_method, start_page, end_page):
-    # Set your Google API Key here or ensure it's in environment variables
-    # For a Streamlit app, it's often better to set it as an environment variable
-    # or pass it securely. For this example, we'll assume it's set.
-    os.environ["GOOGLE_API_KEY"] = "AIzaSyD1f3CDdw71J98b4LEFFM6IUY893qfnqdg" 
+    # Ensure GOOGLE_API_KEY is set in the environment or passed securely
+    # For Streamlit, it's often better to set it as an environment variable
+    # or pass it securely. This line ensures it's available for this function.
+    os.environ["GOOGLE_API_KEY"] = "AIzaSyD1f3CDdw71J98b4LEFFM6IUY893qfnqdg" # Removed hardcoded key
 
     company_base_path = Path(r"D:\Visual Studio Projects\Financial Statement Data Retriever") / company_folder_name
     json_dir = company_base_path / "json_statements"
@@ -68,7 +147,7 @@ def run_converter_process(company_folder_name, periods_to_process, extraction_me
         output_json_file_path = json_dir / f"{period}_financial_statements_raw.json"
 
         status_message = f"Processing period: {period}"
-        print(status_message) # For console output
+        print(status_message)
         results.append(status_message)
 
         if not ocr_text_file_path.exists():
@@ -118,6 +197,163 @@ def run_converter_process(company_folder_name, periods_to_process, extraction_me
     results.append("\n--- LLM Extraction Process Complete ---")
     return "\n".join(results)
 
-# Similar refactoring would be needed for 2_excel_merger.ipynb, 3_excel_formatter.ipynb, and 4_excel_standardization.ipynb
-# You would create `merger_script.py`, `formatter_script.py`, `standardizer_script.py`
-# each with a main function like `run_merger_process`, `run_formatter_process`, `run_standardizer_process`.
+# Step 3: This script merges the individual Excel files generated 
+# by the converter into a single long-format DataFrame and then separates them 
+# by statement type
+
+import pandas as pd
+import numpy as np
+from pathlib import Path
+import os
+
+def run_merger_process(company_folder_name, periods_to_process):
+    company_base_path = Path(r"D:\Visual Studio Projects\Financial Statement Data Retriever") / company_folder_name
+    base_dir = company_base_path / "excel_statements"
+    period_statements_dir = company_base_path / "period_statements"
+
+    period_statements_dir.mkdir(parents=True, exist_ok=True)
+
+    results = []
+    results.append(f"{' BEGINNING CONCATENATING EACH PERIODS ':=^100}")
+
+    financial_statements = []
+    found_files_count = 0
+    for period in periods_to_process:
+        statement_path = base_dir / f"{period}_financial_statements.xlsx"
+        if not statement_path.exists():
+            msg = f'Warning: Excel file not found for period {period} at {statement_path}. Skipping this period.'
+            results.append(msg)
+            continue
+        try:
+            df_statement = pd.read_excel(statement_path)
+            financial_statements.append(df_statement)
+            found_files_count += 1
+        except Exception as e:
+            msg = f'Error reading {statement_path}: {e}. Skipping this period.'
+            results.append(msg)
+            continue
+
+    if found_files_count > 0:
+        results.append(f'Successfully read in {found_files_count} years of financial statements in Excel \n')
+    else:
+        results.append(f'No financial statements were successfully read from Excel files. Please check paths and file existence.')
+        return "\n".join(results) # Exit early if no files found
+
+    row_length = sum(len(df_statement) for df_statement in financial_statements)
+    concatenated_df = pd.concat(financial_statements, ignore_index=True)
+
+    if len(concatenated_df) == row_length:
+        results.append(f'1) SUCCESS: Concatenated successfully dataframes from all periods. Total rows: {len(concatenated_df)}')
+    else:
+        results.append(f'1) ERROR: There are missing rows or an issue during concatenation. Expected {row_length} rows, got {len(concatenated_df)}.')
+
+    if 'statement_type' in concatenated_df.columns:
+        concatenated_df['statement_type'] = concatenated_df['statement_type'].astype(str).str.title()
+        results.append("Applied proper casing to 'statement_type' column.")
+
+    results.append("\n--- Saving Full Concatenated DataFrame ---")
+    full_concatenated_output_path = period_statements_dir / "all_periods_concatenated.xlsx"
+    try:
+        concatenated_df.to_excel(full_concatenated_output_path, index=False)
+        results.append(f"Successfully saved full concatenated DataFrame to: {full_concatenated_output_path}")
+    except Exception as e:
+        results.append(f"ERROR: Could not save full concatenated DataFrame: {e}")
+    results.append("------------------------------------------")
+
+    results.append(f"\n{' SEPARATING BY STATEMENT TYPE AND SAVING ':=^100}")
+    
+    unique_statement_types = concatenated_df['statement_type'].unique()
+    
+    if len(unique_statement_types) > 0:
+        results.append(f"Found {len(unique_statement_types)} unique statement types: {', '.join(unique_statement_types)}")
+        for st_type in unique_statement_types:
+            df_filtered = concatenated_df[concatenated_df['statement_type'] == st_type].copy()
+            output_file_path = period_statements_dir / f"{st_type}.xlsx"
+            try:
+                df_filtered.to_excel(output_file_path, index=False)
+                results.append(f"  - Successfully saved '{st_type}' to: {output_file_path}")
+            except Exception as e:
+                results.append(f"  - ERROR: Could not save '{st_type}' to {output_file_path}: {e}")
+    else:
+        results.append("No unique 'statement_type' found in the concatenated data. No individual files created.")
+
+    results.append("\n--- Statement Separation and Saving Complete ---")
+    return "\n".join(results)
+
+# Step 4: This script takes the merged data, cleans values, 
+# and pivots it into a wide format (items as index, years as columns).
+
+import pandas as pd
+from pathlib import Path
+import os
+
+def run_formatter_process(company_folder_name, periods_to_process):
+    company_base_path = Path(r"D:\Visual Studio Projects\Financial Statement Data Retriever") / company_folder_name
+    period_statements_dir = company_base_path / "period_statements"
+    final_statements_dir = company_base_path / "final_statements"
+
+    final_statements_dir.mkdir(parents=True, exist_ok=True)
+
+    results = []
+    results.append("--- Starting Financial Statement Reformatting ---")
+
+    # Process the 'all_periods_concatenated.xlsx' file first if it exists
+    all_periods_file_path = period_statements_dir / "all_periods_concatenated.xlsx"
+    if all_periods_file_path.exists():
+        results.append(f"\nProcessing combined file: {all_periods_file_path.name}")
+        try:
+            df_long = pd.read_excel(all_periods_file_path)
+
+            required_columns = ['item', 'year', 'value', 'statement_type']
+            if not all(col in df_long.columns for col in required_columns):
+                msg = f"Warning: Skipping {all_periods_file_path.name} — missing required columns ({', '.join(required_columns)})."
+                results.append(msg)
+            else:
+                def clean_value(x):
+                    s = str(x).strip()
+                    if s == 'nan' or s == '' or s.lower() == 'n/a':
+                        return pd.NA
+                    if s.startswith('(') and s.endswith(')'):
+                        s = '-' + s[1:-1]
+                    s = s.replace(',', '').replace(' ', '')
+                    s = pd.Series([s]).replace(r'[^\d\.\-]', '', regex=True).iloc[0]
+                    return pd.to_numeric(s, errors='coerce')
+
+                df_long['value'] = df_long['value'].apply(clean_value)
+                df_long = df_long.dropna(subset=['item', 'year'])
+                df_long['item'] = df_long['item'].astype(str)
+                df_long['year'] = df_long['year'].astype(str)
+
+                # Group by statement_type, item, and year to handle potential duplicates
+                df_grouped = (
+                    df_long
+                    .sort_values(['statement_type', 'item', 'year'])
+                    .groupby(['statement_type', 'item', 'year'], as_index=False)
+                    .agg({'value': 'first'}) # Take the first non-null value
+                )
+
+                # Iterate through unique statement types to create separate wide-format Excel files
+                for st_type in df_grouped['statement_type'].unique():
+                    df_statement_type = df_grouped[df_grouped['statement_type'] == st_type]
+                    
+                    # Pivot to wide format
+                    df_wide = df_statement_type.pivot_table(index='item', columns='year', values='value', aggfunc='first')
+                    df_wide.columns.name = None
+
+                    # Reorder columns to follow periods_to_process if available
+                    if periods_to_process and isinstance(periods_to_process, (list, tuple)):
+                        ordered = [str(p) for p in periods_to_process if str(p) in df_wide.columns]
+                        remaining = [c for c in df_wide.columns if c not in ordered]
+                        df_wide = df_wide.reindex(columns=ordered + remaining)
+
+                    output_file = final_statements_dir / f"{st_type}.xlsx"
+                    df_wide.to_excel(output_file)
+                    results.append(f"Successfully reformatted and saved '{st_type}' to: {output_file}")
+        except Exception as e:
+            results.append(f"Error processing {all_periods_file_path.name}: {e}")
+    else:
+        results.append(f"Warning: Combined file '{all_periods_file_path.name}' not found. Skipping formatting.")
+
+
+    results.append("\n--- Financial Statement Reformatting Complete ---")
+    return "\n".join(results)
