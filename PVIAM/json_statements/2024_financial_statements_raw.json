@@ -1,0 +1,81 @@
+```json
+[
+  {
+    "item_number": null,
+    "statement_type": "Chi Phí Hoạt động Kinh Doanh, Giá Vốn Bán Hàng",
+    "item": "Chi phí hoạt động quản lý quỹ đầu tư chứng khoán và công ty đầu tư chứng khoán",
+    "year": 2024,
+    "value": 21459558999
+  },
+  {
+    "item_number": null,
+    "statement_type": "Chi Phí Hoạt động Kinh Doanh, Giá Vốn Bán Hàng",
+    "item": "Chi phí hoạt động quản lý danh mục đầu tư chứng khoán",
+    "year": 2024,
+    "value": 4515500408
+  },
+  {
+    "item_number": null,
+    "statement_type": "Chi Phí Hoạt động Kinh Doanh, Giá Vốn Bán Hàng",
+    "item": "Chi phí hoạt động tư vấn đầu tư chứng khoán",
+    "year": 2024,
+    "value": 4609647129
+  },
+  {
+    "item_number": null,
+    "statement_type": "Chi Phí Hoạt động Kinh Doanh, Giá Vốn Bán Hàng",
+    "item": "Tổng giá vốn hàng bán",
+    "year": 2024,
+    "value": 30584706537
+  },
+  {
+    "item_number": null,
+    "statement_type": "Chi Phí Hoạt động Kinh Doanh, Giá Vốn Bán Hàng",
+    "item": "Chi phí nguyên vật liệu",
+    "year": 2024,
+    "value": 416266953
+  },
+  {
+    "item_number": null,
+    "statement_type": "Chi Phí Hoạt động Kinh Doanh, Giá Vốn Bán Hàng",
+    "item": "Chi phí nhân công",
+    "year": 2024,
+    "value": 33809422838
+  },
+  {
+    "item_number": null,
+    "statement_type": "Chi Phí Hoạt động Kinh Doanh, Giá Vốn Bán Hàng",
+    "item": "Chi phí khấu hao tài sản cố định",
+    "year": 2024,
+    "value": 691092974
+  },
+  {
+    "item_number": null,
+    "statement_type": "Chi Phí Hoạt động Kinh Doanh, Giá Vốn Bán Hàng",
+    "item": "Thuế, phí lệ phí",
+    "year": 2024,
+    "value": 1021567605
+  },
+  {
+    "item_number": null,
+    "statement_type": "Chi Phí Hoạt động Kinh Doanh, Giá Vốn Bán Hàng",
+    "item": "Chi phí dịch vụ mua ngoài",
+    "year": 2024,
+    "value": 11361361009
+  },
+  {
+    "item_number": null,
+    "statement_type": "Chi Phí Hoạt động Kinh Doanh, Giá Vốn Bán Hàng",
+    "item": "Chi phí bằng tiền khác",
+    "year": 2024,
+    "value": 967189545
+  },
+  {
+    "item_number": null,
+    "statement_type": "Chi Phí Hoạt động Kinh Doanh, Giá Vốn Bán Hàng",
+    "item": "Tổng chi phí hoạt động kinh doanh theo yếu tố",
+    "year": 2024,
+    "value": 48266900924
+  }
+]
+```

@@ -1,0 +1,18 @@
+```json
+[
+  {
+    "item_number": "",
+    "statement_type": "Chi Phí Hoạt động Kinh Doanh, Giá Vốn Bán Hàng",
+    "item": "Chi Phí Hoạt Động Kinh Doanh",
+    "year": 2022,
+    "value": 20400570242
+  },
+  {
+    "item_number": "",
+    "statement_type": "Chi Phí Hoạt động Kinh Doanh, Giá Vốn Bán Hàng",
+    "item": "Giá Vốn Bán Hàng",
+    "year": 2022,
+    "value": ""
+  }
+]
+```
